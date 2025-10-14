@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage-entities
+  annotations:
+    github.com/project-slug: jDmacD/backstage-entities
+spec:
+  type: other
+  lifecycle: unknown
+  owner: talbots_court
