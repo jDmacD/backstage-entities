@@ -36,6 +36,6 @@ spec:
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
-  name: turing/utilities
+  name: utilities
 spec:
   owner: group:default/talbots_court
