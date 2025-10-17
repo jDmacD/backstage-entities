@@ -8,13 +8,6 @@ spec:
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
-  name: default
-spec:
-  owner: group:default/talbots_court
----
-apiVersion: backstage.io/v1alpha1
-kind: System
-metadata:
   name: media
 spec:
   owner: group:default/talbots_court
