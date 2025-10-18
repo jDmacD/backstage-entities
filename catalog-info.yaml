@@ -4,7 +4,7 @@ metadata:
   name: backstage-entities
   annotations:
     github.com/project-slug: jDmacD/backstage-entities
-    backstage.io/techdocs-ref: url:https://github.com/jDmacD/backstage-entities/tree/main/
+    backstage.io/techdocs-ref: dir:.
 spec:
   type: repository
   lifecycle: production
