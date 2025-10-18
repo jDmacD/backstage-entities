@@ -4,7 +4,8 @@ metadata:
   name: backstage-entities
   annotations:
     github.com/project-slug: jDmacD/backstage-entities
+    backstage.io/techdocs-ref: dir:.
 spec:
-  type: other
-  lifecycle: unknown
+  type: repository
+  lifecycle: production
   owner: talbots_court

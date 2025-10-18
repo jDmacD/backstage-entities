@@ -1,0 +1,1 @@
+This is used to store entities that exist outside of kubernetes
