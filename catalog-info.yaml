@@ -9,12 +9,3 @@ spec:
   type: repository
   lifecycle: production
   owner: talbots_court
----
-apiVersion: backstage.io/v1alpha1
-kind: Location
-metadata:
-  name: scaffolds
-spec:
-  type: url
-  targets:
-    - https://github.com/jDmacD/backstage-entities/blob/main/scaffolds/argocd-application/template.yaml
