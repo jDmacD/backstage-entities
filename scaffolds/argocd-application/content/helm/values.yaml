@@ -4,3 +4,6 @@
 # But you may want to double check
 commonLabels:
   backstage.io/kubernetes-id: ${{ values.name }}
+
+extraLabels:
+  backstage.io/kubernetes-id: ${{ values.name }}

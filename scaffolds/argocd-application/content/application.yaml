@@ -13,6 +13,7 @@ spec:
     namespace: ${{ values.name }}
     name: in-cluster
   sources:
+{% if values.isHelm %}
     - repoURL: ${{ values.helmRepoUrl }}
       targetRevision: ${{ values.chartVersion }}
       chart: ${{ values.chartName }}
@@ -22,9 +23,12 @@ spec:
     - repoURL: git@github.com:jDmacD/catalogue.git
       targetRevision: main
       ref: values
+{% endif %}
+{% if values.isKustomize %}
     - repoURL: git@github.com:jDmacD/catalogue.git
       targetRevision: main
       path: ${{ values.name }}/kustomize/base
+{% endif %}
   project: default
   syncPolicy:
     automated:

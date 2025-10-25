@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ${{ values.name }}
+spec:
+  serviceName: ${{ values.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${{ values.name }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.name }}
+    spec:
+      serviceAccountName: ${{ values.name }}
+      containers:
+        - name: ${{ values.name }}
+          image: ${{ values.dockerImage }}:latest
+          ports:
+            - containerPort: ${{ values.dockerPort }}
+              name: http
+          volumeMounts: []
+          envFrom: []
+          livenessProbe: []
+          readinessProbe: []
+      volumes: []

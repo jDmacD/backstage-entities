@@ -155,9 +155,16 @@ spec:
         targetPath: ./${{ parameters.name }}
         values:
           name: ${{ parameters.name }}
+          isHelm: ${{ parameters.isHelm }}
           helmRepoUrl: ${{ parameters.helmRepoUrl }}
+          isHelm: ${{ parameters.isHelm }}
           chartVersion: ${{ parameters.chartVersion }}
           chartValuesUrl: ${{ parameters.chartValuesUrl }}
+          isKustomize: ${{ parameters.isKustomize }}
+          dockerImage: ${{ parameters.dockerImage }}
+          dockerTag: ${{ parameters.dockerTag }}
+          dockerPort: ${{ parameters.dockerPort }}
+          workloadType: ${{ parameters.workloadType }}
 
     - id: createPullRequest
       name: Create Merge Request
