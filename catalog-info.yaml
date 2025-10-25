@@ -15,6 +15,6 @@ kind: Location
 metadata:
   name: scaffolds
 spec:
-  type: file
+  type: url
   targets:
-    - ./scaffolds/argocd-application/template.yaml
+    - https://github.com/jDmacD/backstage-entities/blob/main/scaffolds/argocd-application/template.yaml
