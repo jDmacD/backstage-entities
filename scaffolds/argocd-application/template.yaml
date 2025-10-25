@@ -132,7 +132,7 @@ spec:
                         - deployment
                         - statefulset
                     uniqueItems: true
-                    ui:widget: radio
+                    ui:widget: checkboxes
                   resources:
                     title: Select resources
                     type: array
