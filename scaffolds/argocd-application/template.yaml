@@ -95,7 +95,7 @@ spec:
         - dockerPort
         - hostName
         - workloadType
-        - resources
+        - otherResources
       properties:
         isKustomize:
           title: Is this deployed using kustomize manifests?
