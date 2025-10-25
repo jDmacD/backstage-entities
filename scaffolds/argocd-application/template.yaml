@@ -124,22 +124,19 @@ spec:
                     title: Hostname
                     type: string
                   workloadType:
-                    title: Select a workload type
-                    type: array
-                    items:
-                      type: string
-                      enum:
-                        - deployment
-                        - statefulset
-                    uniqueItems: true
-                    ui:widget: checkboxes
-                  resources:
+                    title: Select a Workload Type
+                    type: string
+                    default: Deployment
+                    enum:
+                      - Deployment
+                      - Statefulset
+                    ui:widget: radio
+                  otherResources:
                     title: Select resources
                     type: array
                     items:
                       type: string
                       enum:
-                        - deployment
                         - service
                         - httproute
                         - serviceaccount
