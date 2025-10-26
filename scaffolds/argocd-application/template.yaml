@@ -358,29 +358,70 @@ spec:
         targetBranchName: main
         title: Create ArgoCD ${{ parameters.name }} Application
         description: |
-          This will deploy an Application with the following properties:
-          - ${{ parameters.helmRepoUrl }}
+          ## ArgoCD Application: ${{ parameters.name }}
 
-    # - id: publish
-    #   name: Publish
-    #   action: publish:github
-    #   input:
-    #     description: This is ${{ parameters.name }}
-    #     repoUrl: ${{ parameters.repoUrl }}
-    #     defaultBranch: 'main'
+          ${{ parameters.description }}
 
-    # - id: register
-    #   name: Register
-    #   action: catalog:register
-    #   input:
-    #     repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
-    #     catalogInfoPath: '/catalog-info.yaml'
+          ### Application Details
+          - **Owner**: `${{ parameters.owner }}`
+          - **System**: `${{ parameters.system }}`
+          - **Namespace**: `${{ parameters.name }}`
+          {%- if parameters.hostName %}
+          - **URL**: https://${{ parameters.hostName }}
+          {%- endif %}
+
+          ### Deployment Configuration
+          {%- if parameters.isHelm and parameters.isKustomize %}
+          This application uses **both Helm and Kustomize** for deployment.
+          {%- elif parameters.isHelm %}
+          This application is deployed using **Helm**.
+          {%- elif parameters.isKustomize %}
+          This application is deployed using **Kustomize**.
+          {%- endif %}
+
+          {%- if parameters.isHelm %}
+
+          #### Helm Configuration
+          - **Repository**: `${{ parameters.helmRepoUrl }}`
+          - **Chart**: `${{ parameters.chartName }}`
+          - **Version**: `${{ parameters.chartVersion }}`
+          - **Values URL**: ${{ parameters.chartValuesUrl }}
+          {%- endif %}
+
+          {%- if parameters.isKustomize %}
+
+          #### Kustomize Configuration
+          - **Docker Image**: `${{ parameters.dockerImage }}:${{ parameters.dockerTag }}`
+          - **Container Port**: `${{ parameters.dockerPort }}`
+          - **Hostname**: `${{ parameters.hostName }}`
+          - **Resources**: Deployment, Service, HTTPRoute, ServiceAccount
+          {%- endif %}
+
+          ### External Links
+          - [GitHub Repository](${{ parameters.githubUrl }})
+          - [Documentation](${{ parameters.documentationUrl }})
+
+          ### ArgoCD Sync Policy
+          - **Auto-prune**: Enabled
+          - **Self-heal**: Enabled
+          - **Create Namespace**: Enabled
+
+          {%- if parameters.deployNow %}
+
+          ### Deployment Status
+          This PR will **deploy the application immediately** upon merge.
+          {%- else %}
+
+          ### Deployment Status
+          This PR will **not deploy immediately**. The application manifest is added but not included in the kustomization resources.
+          {%- endif %}
+
+          ---
+
+          Generated via Backstage ArgoCD Application Template
 
   # some outputs which are saved along with the job for use in the frontend
-  # output:
-  #   links:
-  #     - title: Repository
-  #       url: ${{ steps['publish'].output.remoteUrl }}
-  #     - title: Open in catalog
-  #       icon: catalog
-  #       entityRef: ${{ steps['register'].output.entityRef }}
+  output:
+    links:
+      - title: Pull Request Link
+        url: ${{ steps['createPullRequest'].output.remoteUrl }}
