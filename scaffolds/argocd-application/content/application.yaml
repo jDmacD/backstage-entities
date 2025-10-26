@@ -23,6 +23,7 @@ ${{ values.description | indent(6, true) }}
         { "url": "${{ values.githubUrl }}", "title": "github", "icon": "github" }
       ]
     terasky.backstage.io/source-branch: main
+    terasky.backstage.io/techdocs-path: dir:.
     # terasky.backstage.io/dependsOn: ${{ values.dependsOn }}
 spec:
   destination:
