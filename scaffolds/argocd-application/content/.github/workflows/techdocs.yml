@@ -1,0 +1,49 @@
+name: Publish ${{ values.name }} TechDocs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '${{ values.name }}/docs/**'
+      - '${{ values.name }}/mkdocs.yml'
+
+jobs:
+  publish-${{ values.name | lower }}-techdocs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install TechDocs CLI
+        run: npm install -g @techdocs/cli
+
+      - name: Build documentation
+        run: |
+          npx @techdocs/cli build \
+            --source-dir ./${{ values.name }} \
+            --out-dir ./${{ values.name }}/.site/ \
+            --no-docker -v
+
+      - name: Publish documentation
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
+          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+        run: |
+          npx @techdocs/cli publish \
+            --entity default/Component/${{ values.name }}-application \
+            --directory ./${{ values.name }}/.site/ \
+            --publisher-type awsS3 \
+            --awsEndpoint $AWS_ENDPOINT \
+            --storage-name $AWS_BUCKET \
+            --awsBucketRootPath backstage \
+            --awsS3ForcePathStyle true
