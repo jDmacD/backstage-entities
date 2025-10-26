@@ -6,7 +6,7 @@ metadata:
   title: Argo CD Application Template
   description: A template for creating Argo CD Applications
 spec:
-  owner: user:guest
+  owner: group:default/talbots_court
   type: application
   parameters:
     - title: ArgoCD Application
