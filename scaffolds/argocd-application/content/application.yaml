@@ -7,13 +7,29 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "64"
+    terasky.backstage.io/component-type: website
+    terasky.backstage.io/system: ${{ values.system }}
+    terasky.backstage.io/owner: ${{ values.owner }}
+    terasky.backstage.io/kubernetes-label-selector: backstage.io/kubernetes-id=${{ values.name }}
+    terasky.backstage.io/component-annotations: argocd/app-name=${{ values.name }},grafana/alert-label-selector=name=${{ values.name }}
+    terasky.backstage.io/source-code-repo-url: https://github.com/jDmacD/catalogue/tree/main/${{ values.name }}
+    terasky.backstage.io/description: |
+${{ values.description | indent(6, true) }}
+    terasky.backstage.io/links: |
+      [
+        { "url": "https://${{ values.hostName }}", "title": "site", "icon": "dashboard" },
+        { "url": "${{ values.documentationUrl }}", "title": "documentation", "icon": "docs" },
+        { "url": "${{ values.githubUrl }}", "title": "github", "icon": "github" }
+      ]
+    terasky.backstage.io/source-branch: main
+    # terasky.backstage.io/dependsOn: ${{ values.dependsOn }}
 spec:
   destination:
     namespace: ${{ values.name }}
     name: in-cluster
   sources:
-{% if values.isHelm %}
+{%- if values.isHelm %}
     - repoURL: ${{ values.helmRepoUrl }}
       targetRevision: ${{ values.chartVersion }}
       chart: ${{ values.chartName }}
@@ -23,12 +39,12 @@ spec:
     - repoURL: git@github.com:jDmacD/catalogue.git
       targetRevision: main
       ref: values
-{% endif %}
-{% if values.isKustomize %}
+{%- endif %}
+{%- if values.isKustomize %}
     - repoURL: git@github.com:jDmacD/catalogue.git
       targetRevision: main
       path: ${{ values.name }}/kustomize/base
-{% endif %}
+{%- endif %}
   project: default
   syncPolicy:
     automated:
