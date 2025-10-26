@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - '.github/workflows/${{ values.name }}.yml'
       - '${{ values.name }}/docs/**'
       - '${{ values.name }}/mkdocs.yml'
 
@@ -13,13 +14,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install mkdocs and plugins
+        run: |
+          pip install mkdocs-techdocs-core
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: "lts/*"
 
       - name: Install TechDocs CLI
         run: npm install -g @techdocs/cli
@@ -28,16 +40,16 @@ jobs:
         run: |
           npx @techdocs/cli build \
             --source-dir ./${{ values.name }} \
-            --out-dir ./${{ values.name }}/.site/ \
+            --output-dir ./${{ values.name }}/.site/ \
             --no-docker -v
 
       - name: Publish documentation
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
-          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+          AWS_ACCESS_KEY_ID: {% raw %}${{ secrets.AWS_ACCESS_KEY_ID }}{% endraw %}
+          AWS_SECRET_ACCESS_KEY: {% raw %}${{ secrets.AWS_SECRET_ACCESS_KEY }}{% endraw %}
+          AWS_REGION: {% raw %}${{ secrets.AWS_REGION }}{% endraw %}
+          AWS_ENDPOINT: {% raw %}${{ secrets.AWS_ENDPOINT }}{% endraw %}
+          AWS_BUCKET: {% raw %}${{ secrets.AWS_BUCKET }}{% endraw %}
         run: |
           npx @techdocs/cli publish \
             --entity default/Component/${{ values.name }}-application \
