@@ -38,9 +38,7 @@ spec:
           ui:help: 'Must be lowercase alphanumeric with optional hyphens (no leading/trailing hyphens)'
 
     - title: Target Application (Optional)
-      required:
-        - kustomizeUrl
-        - workloadUrl
+      required: []
       ui:order:
         - kustomizeUrl
         - workloadUrl
@@ -198,19 +196,24 @@ spec:
           resources:
             - ${{ parameters.name }}.yaml
 
+# Everything from here down is optional
+
     - id: logKustomize
+      if: ${{ parameters.kustomizeUrl }}
       name: Format path to kustomize
       action: debug:log
       input:
         message: ${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
 
     - id: logPath
+      if: ${{ parameters.kustomizeUrl }}
       name: Format path to dir
       action: debug:log
       input:
         message: ${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1, -1).join('/') }}
 
     - id: fetchTargetKustomize
+      if: ${{ parameters.kustomizeUrl }}
       name: Fetch Kustomize File
       action: fetch:plain:file
       input:
@@ -218,6 +221,7 @@ spec:
         targetPath: ./${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
         
     - id: mergeTargetKustomize
+      if: ${{ parameters.kustomizeUrl }}
       name: Add to Resource List
       action: roadiehq:utils:merge
       input:
@@ -229,7 +233,8 @@ spec:
             - centralexternalsecret.yaml
 
     - id: templateTargetExternalSecret
-      name: Template DExternal Secret
+      if: ${{ parameters.kustomizeUrl }}
+      name: Template External Secret
       action: fetch:template:file
       input:
         url: ./content/target/externalsecret.yaml
@@ -244,6 +249,7 @@ spec:
           secretPassword: ${{ parameters.secretPassword }}
 
     - id: fetchTargetWorkload
+      if: ${{ parameters.workloadUrl }}
       name: Fetch workload
       action: fetch:plain:file
       input:
@@ -251,6 +257,7 @@ spec:
         targetPath: ./${{ parameters.workloadUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
         
     - id: mergeTargetWorkload
+      if: ${{ parameters.workloadUrl }}
       name: Merge Secret into Workload
       action: roadiehq:utils:jsonata:yaml:transform
       input:
@@ -269,6 +276,7 @@ spec:
           |
 
     - id: writeTargetWorkload
+      if: ${{ parameters.workloadUrl }}
       name: Write merged Workload to YAML
       action: roadiehq:utils:fs:write
       input:
@@ -276,6 +284,7 @@ spec:
         content: ${{ steps.mergeTargetWorkload.output.result }}
 
     - id: fetchClusterrolebinding
+      if: ${{ parameters.kustomizeUrl }}
       name: Fetch External Secret CRB
       action: fetch:plain:file
       input:
@@ -283,6 +292,7 @@ spec:
         targetPath: ./${{ parameters.crbUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
 
     - id: mergeClusterrolebinding
+      if: ${{ parameters.kustomizeUrl }}
       name: Add to Resource List
       action: roadiehq:utils:merge
       input:
@@ -293,4 +303,139 @@ spec:
           subjects:
             - kind: ServiceAccount
               name: default
-              namespace: ${{ parameters.name }}  
+              namespace: ${{ parameters.name }}
+
+    - id: createPullRequest
+      name: Create Merge Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=catalogue&owner=jDmacD
+        branchName: argocd-application-${{ parameters.name }}
+        update: true
+        targetBranchName: main
+        title: Create Postgres Database ${{ parameters.name }}
+        description: |
+          ## CloudNative-PG Database: ${{ parameters.name }}
+
+          This PR creates a new PostgreSQL database using CloudNative-PG operator.
+
+          ### Database Resources Created
+
+          #### 1. Database User (Role)
+          - **Name**: `${{ parameters.name }}`
+          - **Connection Limit**: Unlimited (-1)
+          - **Login**: Enabled
+          - **Comment**: "${{ parameters.name }} application user"
+
+          #### 2. Database
+          - **Name**: `${{ parameters.name }}`
+          - **Owner**: `${{ parameters.name }}`
+
+          #### 3. Kubernetes Secret
+          - **Name**: `${{ parameters.name }}`
+          - **Type**: CloudNative-PG managed secret
+          - **Contains**:
+            - `username` - Database user
+            - `dbname` - Database name
+            - `host` - Database host
+            - `port` - Database port
+            - `url` - Full connection URL
+            - `password` - User password
+
+          #### 4. External Secret
+          - **Name**: `${{ parameters.name }}`
+          - **Namespace**: `cloudnative-pg`
+          - **Purpose**: Syncs credentials to consuming applications
+
+          {%- if parameters.kustomizeUrl or parameters.workloadUrl %}
+
+          ### Target Application Integration
+
+          {%- if parameters.kustomizeUrl %}
+
+          #### Kustomization Updated
+          - **File**: `${{ parameters.kustomizeUrl }}`
+          - **Added Resource**: `centralexternalsecret.yaml`
+
+          #### Central External Secret Created
+          - **Name**: `central`
+          - **Target Namespace**: Extracted from kustomization path
+          - **Secret Key Mappings**:
+          {%- if parameters.secretUsername %}
+            - `username` → `${{ parameters.secretUsername }}`
+          {%- endif %}
+          {%- if parameters.secretDbname %}
+            - `dbname` → `${{ parameters.secretDbname }}`
+          {%- endif %}
+          {%- if parameters.secretHost %}
+            - `host` → `${{ parameters.secretHost }}`
+          {%- endif %}
+          {%- if parameters.secretPort %}
+            - `port` → `${{ parameters.secretPort }}`
+          {%- endif %}
+          {%- if parameters.secretUrl %}
+            - `url` → `${{ parameters.secretUrl }}`
+          {%- endif %}
+          {%- if parameters.secretPassword %}
+            - `password` → `${{ parameters.secretPassword }}`
+          {%- endif %}
+          {%- endif %}
+
+          {%- if parameters.workloadUrl %}
+
+          #### Workload Updated
+          - **File**: `${{ parameters.workloadUrl }}`
+          - **Change**: Added `secretRef` to mount `central` secret as environment variables
+          - **Effect**: Database credentials will be available as environment variables in the container
+          {%- endif %}
+
+          {%- if parameters.crbUrl %}
+
+          #### RBAC Configuration
+          - **File**: `${{ parameters.crbUrl }}`
+          - **Added Subject**: ServiceAccount `default` in namespace `${{ parameters.name }}`
+          - **Purpose**: Grants permissions for External Secrets to read from CloudNative-PG cluster
+          {%- endif %}
+
+          {%- else %}
+
+          ### Target Application Integration
+          No target application specified. The database credentials are available in the `${{ parameters.name }}` secret in the `cloudnative-pg` namespace.
+
+          To consume this database from an application:
+          1. Create an ExternalSecret in your application namespace
+          2. Reference the `${{ parameters.name }}` secret from the `cloudnative-pg` namespace
+          3. Mount the secret into your workload as environment variables
+
+          {%- endif %}
+
+          ### Files Modified
+
+          #### CloudNative-PG Cluster Configuration
+          - `cloudnative-pg/cluster/kustomize/cluster.yaml` - Added role definition
+          - `cloudnative-pg/cluster/kustomize/database/kustomization.yaml` - Added database resource
+          - `cloudnative-pg/cluster/kustomize/database/${{ parameters.name }}.yaml` - Database definition
+          - `cloudnative-pg/cluster/kustomize/externalsecret/kustomization.yaml` - Added external secret resource
+          - `cloudnative-pg/cluster/kustomize/externalsecret/${{ parameters.name }}.yaml` - External secret definition
+
+          {%- if parameters.kustomizeUrl %}
+
+          #### Target Application Configuration
+          - `${{ parameters.kustomizeUrl }}` - Added centralexternalsecret.yaml resource
+          - `${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1, -1).join('/') }}/centralexternalsecret.yaml` - Created external secret for app
+          {%- if parameters.workloadUrl %}
+          - `${{ parameters.workloadUrl }}` - Added secret mount
+          {%- endif %}
+          {%- if parameters.crbUrl %}
+          - `${{ parameters.crbUrl }}` - Added RBAC permissions
+          {%- endif %}
+          {%- endif %}
+
+          ---
+
+          Generated via Backstage CloudNative-PG Database Template
+
+  output:
+    links:
+      - title: Pull Request Link
+        url: ${{ steps['createPullRequest'].output.remoteUrl }}
