@@ -2,7 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
   "packages": [
     "nodejs_24@latest",
-    "yarn@latest"
+    "yarn@latest",
+    "yamlfmt@latest"
   ],
   "shell": {
     "init_hook": [
@@ -11,6 +12,9 @@
     "scripts": {
       "mkdocs": [
         "npx @techdocs/cli serve -v"
+      ],
+      "yamlfmt": [
+        "yamlfmt -no_global_conf -formatter retain_line_breaks_single=true,indentless_arrays=false,indent=2,disallow_anchors=true,scan_folded_as_literal=true,trim_trailing_whitespace=true,eof_newline=true,include_document_start=true -verbose -output_format line scaffolds/postgres-database/template.yaml scaffolds/postgres-database/template.yaml"
       ]
     }
   }
