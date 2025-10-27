@@ -7,22 +7,22 @@ metadata:
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
-  - name: cloudflare
-    kind: Gateway
-    group: gateway.networking.k8s.io
-    namespace: ${{ values.name }}
-    sectionName: https
-  hostnames:
-  - ${{ values.hostName }}
-  rules:
-  - backendRefs:
-    - name: ${{ values.name }}
-      group: ''
-      kind: Service
+    - name: cloudflare
+      kind: Gateway
+      group: gateway.networking.k8s.io
       namespace: ${{ values.name }}
-      port: 80
-      weight: 1
-    matches:
-    - path:
-        type: PathPrefix
-        value: /
+      sectionName: https
+  hostnames:
+    - ${{ values.hostName }}
+  rules:
+    - backendRefs:
+        - name: ${{ values.name }}
+          group: ''
+          kind: Service
+          namespace: ${{ values.name }}
+          port: 80
+          weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /

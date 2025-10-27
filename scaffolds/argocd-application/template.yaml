@@ -1,3 +1,4 @@
+---
 apiVersion: scaffolder.backstage.io/v1beta3
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
 kind: Template
@@ -83,8 +84,8 @@ spec:
           ui:options:
             catalogFilter:
               kind:
-               - Group
-               - User
+                - Group
+                - User
         system:
           title: System
           type: string
@@ -211,25 +212,25 @@ spec:
                     type: string
                     pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$'
                     ui:help: 'Must be a valid hostname (e.g., example.com, app.example.com)'
-                  # workloadType:
-                  #   title: Select a Workload Type
-                  #   type: string
-                  #   default: Deployment
-                  #   enum:
-                  #     - Deployment
-                  #     - Statefulset
-                  #   ui:widget: radio
-                  # otherResources:
-                  #   title: Select resources
-                  #   type: array
-                  #   items:
-                  #     type: string
-                  #     enum:
-                  #       - service
-                  #       - httproute
-                  #       - serviceaccount
-                  #   uniqueItems: true
-                  #   ui:widget: checkboxes
+                    # workloadType:
+                    #   title: Select a Workload Type
+                    #   type: string
+                    #   default: Deployment
+                    #   enum:
+                    #     - Deployment
+                    #     - Statefulset
+                    #   ui:widget: radio
+                    # otherResources:
+                    #   title: Select resources
+                    #   type: array
+                    #   items:
+                    #     type: string
+                    #     enum:
+                    #       - service
+                    #       - httproute
+                    #       - serviceaccount
+                    #   uniqueItems: true
+                    #   ui:widget: checkboxes
                 errorMessage:
                   properties:
                     dockerImage: 'Must be a valid Docker image name (lowercase, alphanumeric with allowed separators)'
@@ -237,7 +238,7 @@ spec:
                     dockerPort: 'Must be a valid port number between 1 and 65535'
                     hostName: 'Must be a valid hostname (lowercase, alphanumeric with dots and hyphens)'
 
-    - title: Deploy to Cluster 
+    - title: Deploy to Cluster
       required:
         - deployNow
       ui:order:
@@ -372,7 +373,7 @@ spec:
         update: true
         targetBranchName: main
         title: Create ArgoCD ${{ parameters.name }} Application
-        commitMessage: (feat): create argocd application ${{ parameters.name }}
+        commitMessage: "feat(argocd): create argocd application ${{ parameters.name }}"
         description: |
           ## ArgoCD Application: ${{ parameters.name }}
 

@@ -37,7 +37,7 @@ spec:
              - a database
              - a secret containing the credentials
 
-            All with the name you supply below.  
+            All with the name you supply below.
             Please __do not include__ "db" or "database" in the name.
         name:
           title: Database name
@@ -84,8 +84,8 @@ spec:
         secretMappingMessage:
           type: 'null'
           description: |
-            The keys of the database secrets need to be mapped to  
-            environment variables to be mounted into the workload.    
+            The keys of the database secrets need to be mapped to
+            environment variables to be mounted into the workload.
             The available keys are:
             - username
             - dbname
@@ -93,9 +93,9 @@ spec:
             - port
             - url
             - password
-            
+
             Blank values will be omitted.
-            
+
         secretUsername:
           title: username
           type: string
@@ -125,7 +125,7 @@ spec:
           title: password
           type: string
           ui:placeholder: DB_PASSWORD
-  
+
   steps:
 
     - id: templateExternalSecret
@@ -208,9 +208,9 @@ spec:
           resources:
             - ${{ parameters.name }}.yaml
 
-# Everything from here down is optional
-
     - id: logKustomize
+      # Everything from here down is optional
+
       if: ${{ parameters.kustomizeUrl }}
       name: Format path to kustomize
       action: debug:log
@@ -231,7 +231,7 @@ spec:
       input:
         url: ${{ parameters.kustomizeUrl }}
         targetPath: ./${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
-        
+
     - id: mergeTargetKustomize
       if: ${{ parameters.kustomizeUrl }}
       name: Add to Resource List
@@ -267,7 +267,7 @@ spec:
       input:
         url: ${{ parameters.workloadUrl }}
         targetPath: ./${{ parameters.workloadUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
-        
+
     - id: mergeTargetWorkload
       if: ${{ parameters.workloadUrl }}
       name: Merge Secret into Workload
@@ -275,12 +275,12 @@ spec:
       input:
         path: ./${{ parameters.workloadUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
         expression: |
-          $ ~> | $ | 
+          $ ~> | $ |
             $merge([
-              $, 
+              $,
               {"spec": {"template": {"spec": {"containers": [
                 $merge([
-                  $.spec.template.spec.containers[0], 
+                  $.spec.template.spec.containers[0],
                   {"envFrom": [{"secretRef": {"name": "central"}}]}
                 ])
               ]}}}}
@@ -326,7 +326,7 @@ spec:
         update: true
         targetBranchName: main
         title: Create Postgres Database ${{ parameters.name }}
-        commitMessage: (feat): create postgres database ${{ parameters.name }}
+        commitMessage: "feat(cnpg): create postgres database ${{ parameters.name }}"
         description: |
           ## CloudNative-PG Database: ${{ parameters.name }}
 
