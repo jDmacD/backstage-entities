@@ -1,0 +1,296 @@
+---
+apiVersion: scaffolder.backstage.io/v1beta3
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
+kind: Template
+metadata:
+  name: postgres-database-template
+  title: CNPG database template
+  description: A template for creating Postgres databases
+spec:
+  owner: group:default/talbots_court
+  type: database
+  parameters:
+    - title: Database
+      required:
+        - name
+      ui:order:
+        - message
+        - name
+      properties:
+        message:
+          type: 'null'
+          description: |
+            This template will create three items:
+             - a role (user)
+             - a database
+             - a secret containing the credentials
+
+            All with the name you supply below.  
+            Please __do not include__ "db" or "database" in the name.
+        name:
+          title: Database name
+          type: string
+          description: A unique name
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+          ui:help: 'Must be lowercase alphanumeric with optional hyphens (no leading/trailing hyphens)'
+
+    - title: Target Application (Optional)
+      required:
+        - kustomizeUrl
+        - workloadUrl
+      ui:order:
+        - kustomizeUrl
+        - workloadUrl
+        - secretMappingMessage
+        - secretUsername
+        - secretDbname
+        - secretHost
+        - secretPort
+        - secretUrl
+        - secretPassword
+        - crbUrl
+      properties:
+
+        crbUrl:
+          type: string
+          title: External Secrets CRB URL
+          default: https://github.com/jDmacD/catalogue/blob/main/external-secrets/kustomize/kubernetes/clusterrolebinding.yaml
+
+        kustomizeUrl:
+          title: URL to kustomization.yaml
+          type: string
+          pattern: '^https:\/\/github\.com\/.+\/kustomization\.yaml$'
+          ui:help: 'Must be a valid URL starting with https://github.com and ending with kustomization.yaml'
+
+        workloadUrl:
+          title: URL to workload (statefulset or deployment)
+          type: string
+          pattern: '^https:\/\/github\.com\/.+\/(deployment|statefulset)\.yaml$'
+          ui:help: 'Must be a valid URL starting with https://github.com and ending with statefulset.yaml or deployment.yaml'
+
+        secretMappingMessage:
+          type: 'null'
+          description: |
+            The keys of the database secrets need to be mapped to  
+            environment variables to be mounted into the workload.    
+            The available keys are:
+            - username
+            - dbname
+            - host
+            - port
+            - url
+            - password
+            
+            Blank values will be omitted.
+            
+        secretUsername:
+          title: username
+          type: string
+          ui:placeholder: DB_USERNAME
+
+        secretDbname:
+          title: dbname
+          type: string
+          ui:placeholder: DB_NAME
+
+        secretHost:
+          title: host
+          type: string
+          ui:placeholder: DB_HOST
+
+        secretPort:
+          title: port
+          type: string
+          ui:placeholder: DB_PORT
+
+        secretUrl:
+          title: url
+          type: string
+          ui:placeholder: DB_URL
+
+        secretPassword:
+          title: password
+          type: string
+          ui:placeholder: DB_PASSWORD
+  
+  steps:
+
+    - id: templateExternalSecret
+      name: Template External Secret
+      action: fetch:template:file
+      input:
+        url: ./content/cloudnative-pg/cluster/kustomize/externalsecret/externalsecret.yaml
+        targetPath: ./cloudnative-pg/cluster/kustomize/externalsecret/${{ parameters.name }}.yaml
+        values:
+          name: ${{ parameters.name }}
+
+    - id: templateDatabase
+      name: Template Databaser
+      action: fetch:template:file
+      input:
+        url: ./content/cloudnative-pg/cluster/kustomize/database/database.yaml
+        targetPath: ./cloudnative-pg/cluster/kustomize/database/${{ parameters.name }}.yaml
+        values:
+          name: ${{ parameters.name }}
+
+    - id: fetchCluster
+      name: Fetch Cluster Definition
+      action: fetch:plain:file
+      input:
+        url: https://github.com/jDmacD/catalogue/blob/main/cloudnative-pg/cluster/kustomize/cluster.yaml
+        targetPath: ./cloudnative-pg/cluster/kustomize/cluster.yaml
+
+    - id: mergeCluster
+      name: Merge Role Into Cluster Definition
+      action: roadiehq:utils:merge
+      input:
+        path: ./cloudnative-pg/cluster/kustomize/cluster.yaml
+        mergeArrays: true
+        preserveYamlComments: true
+        content:
+          spec:
+            managed:
+              roles:
+                - name: ${{ parameters.name }}
+                  ensure: present
+                  comment: ${{ parameters.name }} application user
+                  connectionLimit: -1
+                  login: true
+                  passwordSecret:
+                    name: ${{ parameters.name }}
+
+    - id: fetchDatabaseKustomize
+      name: Fetch Database Kustomize
+      action: fetch:plain:file
+      input:
+        url: https://github.com/jDmacD/catalogue/blob/main/cloudnative-pg/cluster/kustomize/database/kustomization.yaml
+        targetPath: ./cloudnative-pg/cluster/kustomize/database/kustomization.yaml
+
+    - id: mergeDatabaseKustomize
+      name: Merge Database Kustomize
+      action: roadiehq:utils:merge
+      input:
+        path: ./cloudnative-pg/cluster/kustomize/database/kustomization.yaml
+        mergeArrays: true
+        preserveYamlComments: true
+        content:
+          resources:
+            - ${{ parameters.name }}.yaml
+
+    - id: fetchExternalsecretKustomize
+      name: Fetch External Secret Kustomize
+      action: fetch:plain:file
+      input:
+        url: https://github.com/jDmacD/catalogue/blob/main/cloudnative-pg/cluster/kustomize/externalsecret/kustomization.yaml
+        targetPath: ./cloudnative-pg/cluster/kustomize/externalsecret/kustomization.yaml
+
+    - id: mergeExternalsecretKustomize
+      name: Merge External Secret Kustomize
+      action: roadiehq:utils:merge
+      input:
+        path: ./cloudnative-pg/cluster/kustomize/externalsecret/kustomization.yaml
+        mergeArrays: true
+        preserveYamlComments: true
+        content:
+          resources:
+            - ${{ parameters.name }}.yaml
+
+    - id: logKustomize
+      name: Format path to kustomize
+      action: debug:log
+      input:
+        message: ${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+
+    - id: logPath
+      name: Format path to dir
+      action: debug:log
+      input:
+        message: ${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1, -1).join('/') }}
+
+    - id: fetchTargetKustomize
+      name: Fetch Kustomize File
+      action: fetch:plain:file
+      input:
+        url: ${{ parameters.kustomizeUrl }}
+        targetPath: ./${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+        
+    - id: mergeTargetKustomize
+      name: Add to Resource List
+      action: roadiehq:utils:merge
+      input:
+        path: ./${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+        mergeArrays: true
+        preserveYamlComments: true
+        content:
+          resources:
+            - centralexternalsecret.yaml
+
+    - id: templateTargetExternalSecret
+      name: Template DExternal Secret
+      action: fetch:template:file
+      input:
+        url: ./content/target/externalsecret.yaml
+        targetPath: ./${{ parameters.kustomizeUrl.split('/blob/').pop().split('/').slice(1, -1).join('/') }}/centralexternalsecret.yaml
+        values:
+          name: ${{ parameters.name }}
+          secretUsername: ${{ parameters.secretUsername }}
+          secretDbname: ${{ parameters.secretDbname }}
+          secretHost: ${{ parameters.secretHost }}
+          secretPort: ${{ parameters.secretPort }}
+          secretUrl: ${{ parameters.secretUrl }}
+          secretPassword: ${{ parameters.secretPassword }}
+
+    - id: fetchTargetWorkload
+      name: Fetch workload
+      action: fetch:plain:file
+      input:
+        url: ${{ parameters.workloadUrl }}
+        targetPath: ./${{ parameters.workloadUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+        
+    - id: mergeTargetWorkload
+      name: Merge Secret into Workload
+      action: roadiehq:utils:jsonata:yaml:transform
+      input:
+        path: ./${{ parameters.workloadUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+        expression: |
+          $ ~> | $ | 
+            $merge([
+              $, 
+              {"spec": {"template": {"spec": {"containers": [
+                $merge([
+                  $.spec.template.spec.containers[0], 
+                  {"envFrom": [{"secretRef": {"name": "central"}}]}
+                ])
+              ]}}}}
+            ])
+          |
+
+    - id: writeTargetWorkload
+      name: Write merged Workload to YAML
+      action: roadiehq:utils:fs:write
+      input:
+        path: ./${{ parameters.workloadUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+        content: ${{ steps.mergeTargetWorkload.output.result }}
+
+    - id: fetchClusterrolebinding
+      name: Fetch External Secret CRB
+      action: fetch:plain:file
+      input:
+        url: ${{ parameters.crbUrl }}
+        targetPath: ./${{ parameters.crbUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+
+    - id: mergeClusterrolebinding
+      name: Add to Resource List
+      action: roadiehq:utils:merge
+      input:
+        path: ./${{ parameters.crbUrl.split('/blob/').pop().split('/').slice(1).join('/') }}
+        mergeArrays: true
+        preserveYamlComments: true
+        content:
+          subjects:
+            - kind: ServiceAccount
+              name: default
+              namespace: ${{ parameters.name }}  

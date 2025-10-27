@@ -1,0 +1,15 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: ${{ values.name }}
+  labels:
+    'backstage.io/kubernetes-id': database-${{ values.name }}
+  annotations:
+    terasky.backstage.io/title: database-${{ values.name }}
+    terasky.backstage.io/kubernetes-label-selector: backstage.io/kubernetes-id=database-${{ values.name }}
+spec:
+  name: ${{ values.name }}
+  owner: ${{ values.name }}
+  cluster:
+    name: central
