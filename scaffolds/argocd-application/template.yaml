@@ -4,7 +4,22 @@ kind: Template
 metadata:
   name: argocd-application-template
   title: Argo CD Application Template
-  description: A template for creating Argo CD Applications
+  description: |
+    Creates an ArgoCD Application with flexible deployment options and comprehensive Backstage integration.
+
+    This template supports:
+    - Helm chart deployments with custom values
+    - Kustomize-based deployments with generated manifests
+    - Hybrid deployments using both Helm and Kustomize together
+    - Optional immediate deployment or deferred deployment
+
+    Generated resources include:
+    - ArgoCD Application manifest with automated sync policies (prune, self-heal)
+    - Kubernetes resources (Deployment, Service, HTTPRoute, ServiceAccount)
+    - TechDocs documentation auto-generated from template parameters
+    - GitHub Actions workflow for automated documentation publishing to S3
+
+    Creates a pull request to the catalogue repository with all generated files and detailed deployment information.
 spec:
   owner: group:default/talbots_court
   type: application

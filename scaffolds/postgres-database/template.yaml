@@ -5,7 +5,19 @@ kind: Template
 metadata:
   name: postgres-database-template
   title: CNPG database template
-  description: A template for creating Postgres databases
+  description: |
+    Creates a PostgreSQL database using CloudNative-PG operator with managed credentials and External Secrets integration.
+
+    This template provisions:
+    - A dedicated database user (role) with login credentials
+    - A new database owned by the user
+    - Kubernetes secrets with connection details (username, password, host, port, URL)
+    - External Secrets for syncing credentials to application namespaces
+
+    Optionally integrates with existing applications by:
+    - Creating ExternalSecrets with custom key mappings
+    - Mounting database credentials into workloads as environment variables
+    - Configuring RBAC permissions for cross-namespace secret access
 spec:
   owner: group:default/talbots_court
   type: database
