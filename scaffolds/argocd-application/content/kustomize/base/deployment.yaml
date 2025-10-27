@@ -20,6 +20,13 @@ spec:
           ports:
             - containerPort: ${{ values.dockerPort }}
               name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
           volumeMounts: []
           envFrom: []
           livenessProbe: {}

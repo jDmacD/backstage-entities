@@ -12,7 +12,6 @@ labels:
     includeSelectors: false
     includeTemplates: true
 
-# https://hub.docker.com/r/backstage/backstage/tags
 images:
   - name: ${{ values.dockerImage }}
     newTag: ${{ values.dockerTag }}

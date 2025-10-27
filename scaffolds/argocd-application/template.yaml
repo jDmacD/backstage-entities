@@ -167,10 +167,6 @@ spec:
     - title: Kustomize Configuration
       required:
         - isKustomize
-        - dockerImage
-        - dockerTag
-        - dockerPort
-        - hostName
       ui:order:
         - isKustomize
         - dockerImage
@@ -191,6 +187,11 @@ spec:
                   isKustomize:
                     const: true
               then:
+                required:
+                  - dockerImage
+                  - dockerTag
+                  - dockerPort
+                  - hostName
                 properties:
                   dockerImage:
                     title: Docker image
@@ -271,19 +272,69 @@ spec:
           chartVersion: ${{ parameters.chartVersion }}
           chartValuesUrl: ${{ parameters.chartValuesUrl }}
 
-    - id: templateHelm
-      name: Template Helm
-      action: fetch:template
+    - id: fetchExternalHelm
       if: ${{ parameters.isHelm }}
+      name: Fetch External Helm Values
+      action: fetch:plain:file
       input:
-        url: ./content/helm
-        targetPath: ./${{ parameters.name }}/helm
-        values:
-          name: ${{ parameters.name }}
-          isHelm: ${{ parameters.isHelm }}
-          helmRepoUrl: ${{ parameters.helmRepoUrl }}
-          chartVersion: ${{ parameters.chartVersion }}
-          chartValuesUrl: ${{ parameters.chartValuesUrl }}
+        url: ${{ parameters.chartValuesUrl }}
+        targetPath: ./${{ parameters.name }}/helm/values.yaml
+
+    - id: mergeExternalHelm
+      if: ${{ parameters.isHelm }}
+      name: Add to Resource List
+      action: roadiehq:utils:merge
+      input:
+        path: ./${{ parameters.name }}/helm/values.yaml
+        mergeArrays: true
+        preserveYamlComments: true
+        content:
+          commonLabels:
+            backstage.io/kubernetes-id: ${{ parameters.name }}
+          extraLabels:
+            backstage.io/kubernetes-id: ${{ parameters.name }}
+
+    # - id: mergeCommonLabels
+    #   if: ${{ parameters.isHelm }}
+    #   name: Merge Common Labels
+    #   action: roadiehq:utils:jsonata:yaml:transform
+    #   input:
+    #     path: ./${{ parameters.name }}/helm/values.yaml
+    #     expression: |
+    #       $ ~> | $ | 
+    #         $exists(commonLabels) ? 
+    #           {"commonLabels": $merge([
+    #             commonLabels, 
+    #             {"backstage.io/kubernetes-id": "foo"}
+    #           ])}
+    #         : 
+    #           {}
+    #       |
+
+    # - id: writeTargetWorkload
+    #   if: ${{ parameters.isHelm }}
+    #   name: Write merged Workload to YAML
+    #   action: roadiehq:utils:fs:write
+    #   input:
+    #     path: ./${{ parameters.name }}/helm/values.yaml
+    #     content: ${{ steps.mergeCommonLabels.output.result }}
+
+    # - id: mergeExtraLabels
+    #   if: ${{ parameters.isHelm }}
+    #   name: Merge Extra Labels
+    #   action: roadiehq:utils:jsonata:yaml:transform
+    #   input:
+    #     path: ./${{ parameters.name }}/helm/values.yaml
+    #     expression: |
+    #       $ ~> | $ | 
+    #         $exists(extraLabels) ? 
+    #           extraLabels = $merge([
+    #             extraLabels, 
+    #             {"backstage.io/kubernetes-id": "${{ parameters.name }}"}
+    #           ]) 
+    #         : 
+    #           $ 
+    #       |
 
     - id: templateKustomize
       name: Template Kustomize

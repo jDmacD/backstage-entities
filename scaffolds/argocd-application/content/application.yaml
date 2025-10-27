@@ -36,7 +36,7 @@ spec:
       chart: ${{ values.chartName }}
       helm:
         valueFiles:
-        - $values/${{ values.name }}/helm/values.yaml
+          - $values/${{ values.name }}/helm/values.yaml
     - repoURL: git@github.com:jDmacD/catalogue.git
       targetRevision: main
       ref: values
