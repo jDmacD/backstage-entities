@@ -372,6 +372,7 @@ spec:
         update: true
         targetBranchName: main
         title: Create ArgoCD ${{ parameters.name }} Application
+        commitMessage: (feat): create argocd application ${{ parameters.name }}
         description: |
           ## ArgoCD Application: ${{ parameters.name }}
 

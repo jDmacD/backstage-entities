@@ -326,6 +326,7 @@ spec:
         update: true
         targetBranchName: main
         title: Create Postgres Database ${{ parameters.name }}
+        commitMessage: (feat): create postgres database ${{ parameters.name }}
         description: |
           ## CloudNative-PG Database: ${{ parameters.name }}
 
