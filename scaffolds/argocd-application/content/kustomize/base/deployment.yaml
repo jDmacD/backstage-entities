@@ -27,8 +27,3 @@ spec:
             limits:
               cpu: "500m"
               memory: "256Mi"
-          volumeMounts: []
-          envFrom: []
-          livenessProbe: {}
-          readinessProbe: {}
-      volumes: []
