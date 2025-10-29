@@ -264,6 +264,7 @@ spec:
           description: ${{ parameters.description }}
           githubUrl: ${{ parameters.githubUrl }}
           documentationUrl: ${{ parameters.documentationUrl }}
+          hostName: ${{ parameters.hostName }}
           owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
           isKustomize: ${{ parameters.isKustomize }}
