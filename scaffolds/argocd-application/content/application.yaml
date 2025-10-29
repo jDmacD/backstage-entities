@@ -10,7 +10,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "64"
     terasky.backstage.io/component-type: website
     terasky.backstage.io/system: ${{ values.system }}
-    terasky.backstage.io/owner: ${{ (values.owner | parseEntityRef).namespace }}/${{ (values.owner | parseEntityRef).name }}
+    terasky.backstage.io/owner: ${{ (values.owner | parseEntityRef).name }}
     terasky.backstage.io/kubernetes-label-selector: backstage.io/kubernetes-id=${{ values.name }}
     terasky.backstage.io/component-annotations: argocd/app-name=${{ values.name }},grafana/alert-label-selector=name=${{ values.name }}
     terasky.backstage.io/source-code-repo-url: https://github.com/jDmacD/catalogue/tree/main/${{ values.name }}
